@@ -1,0 +1,13 @@
+.bts-weather-wrapper .temp {
+  font-size: 20px;
+}
+.bts-weather-wrapper .t-a-c {
+  text-align: center;
+}
+.bts-weather-wrapper .form-item.form-type-textfield.form-item-geoid input {
+  width: 90%;
+  margin: 10px 0;
+}
+.bts-weather-wrapper .form-actions {
+  text-align: center;
+}

@@ -1,0 +1,130 @@
+<?php
+
+/**
+ * @file
+ * Display weather in the block for the selected city.
+ *
+ * File name: bts_weather.module
+ * Date: 29.09.19
+ * Developer: http://BuyTopSite.com
+ */
+
+// Include files.
+module_load_include('inc', 'bts_weather', 'includes/bts_weather.fn');
+module_load_include('inc', 'bts_weather', 'includes/bts_weather.forms');
+
+/**
+ * Implements hook_permission().
+ */
+function bts_weather_permission() {
+  return array(
+    'administer bts weather' => array(
+      'title' => t('Administer bts weather'),
+      'description' => t('Allows users to configure bts weather displays.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_help().
+ */
+function bts_weather_help($path, $arg) {
+  $output = '';
+  switch ($path) {
+    case 'admin/config/user-interface/bts-weather':
+    case 'admin/help#bts_weather':
+      $output .= '<p>';
+      $output .= t('You can display a !link_block_settings with the weather output in a region convenient for you. The default city for the weather can be specified in the module  !link_module_settings.',
+        array(
+          '!link_block_settings' => l(t('block'), 'admin/structure/block/manage/bts_weather/weather/configure'),
+          '!link_module_settings' => l(t('settings'), 'admin/config/user-interface/bts-weather'),
+        ));
+      $output .= '</p>';
+      break;
+  }
+
+  return $output;
+}
+
+/**
+ * Implements hook_contextual_links_view_alter().
+ *
+ * Added the link settings module to block.
+ */
+function bts_weather_contextual_links_view_alter(&$element, $items) {
+  if (isset($element['#element']['#block']) && $element['#element']['#block']->delta == "weather") {
+    $element['#links']['bts_weather'] = array(
+      'title' => 'Configure module settings',
+      'href' => url('/admin/config/user-interface/bts-weather', array('absolute' => TRUE)),
+    );
+  }
+}
+
+/**
+ * Implements hook_menu().
+ */
+function bts_weather_menu() {
+  $items['admin/config/user-interface/bts-weather'] = array(
+    'title' => 'BTS Weather',
+    'description' => 'Configure Weather.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('bts_weather_settings_form'),
+    //'file' => 'includes/bts_weather.forms.inc',
+    'access arguments' => array('administer bts weather'),
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['bts-weather/autocomplete'] = array(
+    'page callback' => 'bts_weather_search_autocomplete',
+    'page arguments' => array(2),
+    //'file' => 'includes/bts_weather.forms.inc',
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function bts_weather_theme($existing, $type, $theme, $path) {
+
+  return array(
+    'bts_weather_block' => array(
+      'variables' => array('bts_weather' => NULL),
+      'template' => 'bts-weather-block',
+      'path' => $path . '/templates',
+      'base hook' => 'bts_weather_block',
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function bts_weather_block_info() {
+  $blocks['weather'] = array(
+    'info' => t('BTS Weather'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function bts_weather_block_view($delta = '') {
+  $block = array();
+  if (variable_get('bts_weather_apikey', '')) {
+    switch ($delta) {
+      case 'weather':
+        module_load_include('inc', 'bts_weather', 'includes/bts_weather.forms');
+        $block['subject'] = t('BTS Weather');
+        $block['content'] = drupal_get_form('bts_weather_block_form');
+        break;
+    }
+  }
+
+  return $block;
+}

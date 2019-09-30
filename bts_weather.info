@@ -1,0 +1,5 @@
+name = BTS Weather
+description = Displays the Weather in block on site.
+core = 7.x
+dependencies[] = block
+configure = admin/config/user-interface/bts-weather

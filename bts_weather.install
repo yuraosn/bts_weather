@@ -1,0 +1,108 @@
+<?php
+
+/**
+ * @file
+ * Install the weather module.
+ *
+ * File name: bts_weather.install
+ * Date: 29.09.19
+ * Developer: http://BuyTopSite.com
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function bts_weather_schema() {
+  $schema['bts_weather'] = array(
+    'description' => 'List cities.',
+    'fields' => array(
+      'geoid' => array(
+        'description' => 'GeoID of the location.',
+        'type' => 'varchar',
+        'length' => 20,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'name' => array(
+        'description' => 'Name of location.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'country' => array(
+        'description' => 'Country of location.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'lon' => array(
+        'description' => 'Longitude of location.',
+        'type' => 'float',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0.0,
+      ),
+      'lat' => array(
+        'description' => 'Latitude of location.',
+        'type' => 'float',
+        'size' => 'big',
+        'not null' => TRUE,
+        'default' => 0.0,
+      ),
+    ),
+    'primary key' => array('geoid'),
+    'indexes' => array(
+      'name' => array('name'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * This support function inserts data into the bts_weather table from file.
+ */
+function _bts_weather_data_installation() {
+  $file_all = drupal_get_path('module', 'bts_weather') . '/includes/city.list.ru.json';
+  $city_list = file_get_contents($file_all);
+  if ($city_list) {
+    $city_list = json_decode($city_list);
+    $query = db_insert('bts_weather')
+      ->fields(array('geoid', 'name', 'country', 'lon', 'lat'));
+    foreach ($city_list as $city) {
+      $query->values(array(
+        'geoid' => $city->id,
+        'name' => $city->name,
+        'country' => $city->country,
+        'lon' => $city->coord->lon,
+        'lat' => $city->coord->lat,
+      ));
+    }
+    $query->execute();
+  }
+}
+
+/**
+ * Implements hook_install()
+ */
+function bts_weather_install() {
+  // Import locations.
+  _bts_weather_data_installation();
+  variable_set('bts_weather_count_days', 5);
+  variable_set('bts_weather_cache_expire', 60);
+  variable_set('bts_weather_apikey', 'eab0aae7fdfa2caf0aee0bf062bf1860');
+  $t = get_t();
+  drupal_set_message($t('To display the weather in the block on the site, you need to configure the !link_block.', array(
+    '!link_block' => l($t('module'), 'admin/config/user-interface/bts-weather'),
+  )), 'warning');
+}
+
+/**
+ * Implements hook_uninstall()
+ */
+function bts_weather_uninstall() {
+  // Remove all settings of this module.
+  db_query("DELETE FROM {variable} WHERE name LIKE 'bts_weather_%'");
+}
