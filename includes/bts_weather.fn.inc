@@ -188,12 +188,12 @@ function bts_weather_request_openweathermap(string $type, $search, $reset_cache 
           case 'forecast':
           case 'weather':
             $params['id'] = $search;
-            $params['cnt'] = 5;
+            $params['cnt'] = variable_get('bts_weather_count_days', 5);
             break;
 
           case 'daily':
             $params['id'] = $search;
-            $params['cnt'] = 5;
+            $params['cnt'] = variable_get('bts_weather_count_days', 5);
             unset($params['units'], $params['lang']);
             break;
 
